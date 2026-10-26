@@ -1,73 +1,106 @@
-# OCR de Horarios UNIMET
+# OCR de horarios UNIMET
 
-Extractor local para planes de horario de la Universidad Metropolitana. Lee los
-PDF, reconstruye las columnas, cruza cada código con el nombre completo de la
-materia y exporta CSV/XLSX.
+Aplicación de escritorio en Python que extrae las materias de planes de horario de la Universidad Metropolitana y las convierte en datos estructurados. Reconstruye las columnas del PDF, relaciona cada código con el nombre de la materia y genera archivos CSV y Excel listos para revisar o analizar.
 
-## Por qué no aplica OCR a todos los archivos
+El procesamiento se realiza localmente: los horarios no se envían a servicios externos.
 
-Los horarios incluidos contienen una capa de texto. Leer esa capa es más rápido
-y preciso que reconocer visualmente la página, especialmente para códigos y
-aulas como `A2-002`. Si se recibe un PDF escaneado, el programa puede usar
-Tesseract como fallback local.
+## Funcionalidades principales
+
+- Importación de horarios en formato PDF.
+- Lectura directa de la capa de texto para obtener mayor precisión.
+- OCR opcional con Tesseract para documentos escaneados.
+- Validación del formato Plan Horario UNIMET.
+- Interfaz gráfica con soporte para arrastrar y soltar archivos.
+- Clasificación visual de las clases en seis categorías.
+- Consolidación de materias repetidas en varios días.
+- Exportación individual y consolidada a CSV y XLSX.
+- Catálogo local para relacionar códigos y nombres de materias.
+- Herramienta de línea de comandos para procesar varios archivos.
+
+## Tecnologías
+
+- Python
+- pypdf
+- openpyxl
+- Tkinter y tkinterdnd2
+- Pillow
+- Tesseract OCR como componente opcional
+
+## ¿Por qué no se aplica OCR a todos los archivos?
+
+Los planes de horario habituales contienen una capa de texto. Leer esa información es más rápido y preciso que reconocer visualmente cada página, especialmente para códigos, secciones y aulas como `A2-002`.
+
+Cuando el archivo proviene de un escáner y no contiene texto utilizable, la aplicación puede recurrir a Tesseract como alternativa local.
 
 ## Instalación
 
+Requiere Python 3.10 o una versión posterior.
+
 ```powershell
+git clone https://github.com/luismarcanoc/OCR_horario.git
+cd OCR_horario
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
 ```
 
-`openpyxl` viene incluido en esos requisitos para generar XLSX. Si no está
-instalado, el programa mantiene la salida CSV y muestra un aviso.
+`openpyxl` permite generar libros XLSX. Si no está disponible, el programa conserva la salida CSV y muestra un aviso.
 
-## Interfaz gráfica
-
-Ejecuta desde esta carpeta:
+## Uso con interfaz gráfica
 
 ```powershell
 python main.py
 ```
 
-Se abrirá una ventana vertical donde puedes arrastrar un horario PDF o buscarlo
-en el equipo. Después de validarlo, muestra las clases en seis categorías y
-guarda automáticamente el CSV dentro de `resultados/`.
+En la ventana puedes arrastrar un horario PDF o seleccionarlo desde el equipo. Después de validarlo, la aplicación muestra las clases y guarda el resultado dentro de `resultados/`.
 
-La interfaz solo acepta PDF que contengan las marcas del formato Plan Horario
-UNIMET. El procesamiento es completamente local.
+Solo se aceptan documentos que contengan las marcas correspondientes al formato Plan Horario UNIMET.
 
-La antigua herramienta por comandos sigue disponible para procesamiento en lote:
+## Procesamiento por línea de comandos
 
 ```powershell
 python -m ocr_horarios.cli . --salida resultados
 ```
 
-El programa ignora automáticamente los PDF cuyo nombre contiene `flujograma`.
+Los PDF cuyo nombre contiene `flujograma` se omiten automáticamente.
 
-## Resultados
+## Archivos generados
 
-- Un CSV por horario con las columnas solicitadas.
+- Un CSV por cada horario procesado.
 - `todos_los_horarios.xlsx`, con una hoja por PDF.
-- `todos_los_horarios.csv`, que añade `CODIGO`, `PERIODO` y `ARCHIVO` para
-  permitir auditoría y distinguir trimestres.
+- `todos_los_horarios.csv`, con `CODIGO`, `PERIODO` y `ARCHIVO` para auditoría.
 
-Las clases que se repiten dos días con la misma hora, aula, sección y profesor
-se consolidan en una sola fila, por ejemplo `Lunes / Miércoles`.
+Las clases que comparten hora, aula, sección y profesor se consolidan en una sola fila. Por ejemplo: `Lunes / Miércoles`.
 
-## Base de materias
+## Catálogo de materias
 
-`data/materias.json` contiene el cruce código-nombre obtenido del flujograma.
-Puede ampliarse manualmente. Las electivas `FGE...` que no estén en el catálogo
-conservan el nombre disponible en el horario; el programa nunca inventa el
-nombre faltante.
+`data/materias.json` contiene la relación entre códigos y nombres obtenida del flujograma académico. Puede ampliarse manualmente.
 
-## PDF escaneado (opcional)
+Si una electiva `FGE...` no existe en el catálogo, el programa conserva el nombre disponible en el horario y nunca inventa datos faltantes.
 
-Para habilitar OCR local:
+## PDF escaneado y OCR opcional
 
 ```powershell
 python -m pip install -r requirements-ocr.txt
 ```
 
-También debe instalarse Tesseract OCR con el paquete de idioma español y dejar
-`tesseract.exe` disponible en `PATH`. Esta dependencia no hace falta para los
-PDF actuales.
+También debes instalar Tesseract OCR con el idioma español y dejar `tesseract.exe` disponible en `PATH`. No es necesario para los PDF que ya contienen texto.
+
+## Estructura principal
+
+```text
+ocr_horarios/   Lógica de extracción, normalización y exportación
+data/           Catálogo local de materias
+assets/         Recursos de la interfaz
+tests/          Pruebas automatizadas
+resultados/     Archivos generados localmente
+main.py         Punto de entrada de la interfaz gráfica
+```
+
+## Privacidad
+
+Los horarios pueden contener información académica o personal. Antes de publicar archivos de ejemplo, elimina nombres, identificadores y cualquier dato sensible. Para una demostración pública es preferible utilizar documentos anonimizados o datos sintéticos.
+
+## Estado del proyecto
+
+Proyecto funcional orientado a automatizar la lectura de horarios académicos y convertir documentos semiestructurados en datos reutilizables.
